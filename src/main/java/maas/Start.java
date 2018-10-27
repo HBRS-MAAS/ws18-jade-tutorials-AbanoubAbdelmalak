@@ -8,6 +8,9 @@ public class Start {
     public static void main(String[] args) {
     	List<String> agents = new Vector<>();
     	agents.add("tester:maas.tutorials.BookBuyerAgent");
+    	for (int i = 0; i <=19;i++) {
+    		agents.add("buyer"+i+":maas.tutorials.BookBuyerAgent");
+    	}
 
     	List<String> cmd = new Vector<>();
     	cmd.add("-agents");

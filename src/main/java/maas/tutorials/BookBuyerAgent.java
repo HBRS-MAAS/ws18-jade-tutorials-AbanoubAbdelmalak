@@ -9,10 +9,16 @@ import jade.domain.FIPANames;
 import jade.domain.JADEAgentManagement.JADEManagementOntology;
 import jade.domain.JADEAgentManagement.ShutdownPlatform;
 import jade.lang.acl.ACLMessage;
+import jade.core.AID;
 
 
 @SuppressWarnings("serial")
 public class BookBuyerAgent extends Agent {
+	// The title of the book to buy
+	private String targetBookTitle;
+	// The list of known seller agents
+	private AID[] sellerAgents = {new AID("seller1", AID.ISLOCALNAME),
+			new AID("seller2", AID.ISLOCALNAME)};
 	protected void setup() {
 	// Printout a welcome message
 		System.out.println("Hello! Buyer-agent "+getAID().getName()+" is ready.");
@@ -22,6 +28,16 @@ public class BookBuyerAgent extends Agent {
  		} catch (InterruptedException e) {
  			//e.printStackTrace();
  		}
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+        targetBookTitle = (String) args[0];
+        System.out.println("Trying to buy "+targetBookTitle);
+        }
+        else {
+        // Make the agent terminate immediately
+        System.out.println("No book title specified");
+        doDelete();
+        }
 		addBehaviour(new shutdown());
 
 	}
@@ -47,6 +63,17 @@ public class BookBuyerAgent extends Agent {
 			    //LOGGER.error(e);
 			}
 
+		}
+	}
+	private class buy extends Behaviour {
+		public void action() {
+			
+		}
+
+		@Override
+		public boolean done() {
+			// TODO Auto-generated method stub
+			return false;
 		}
 	}
 }
