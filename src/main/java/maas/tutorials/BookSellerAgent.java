@@ -13,19 +13,30 @@ import jade.lang.acl.MessageTemplate;
 
 @SuppressWarnings("serial")
 public class BookSellerAgent extends Agent {
+  private boolean serverFlag = false;
+  private boolean purchaseFlag = false;
   // The catalogue of books for sale (maps the title of a book to its price)
   private Hashtable catalogue;
   // The GUI by means of which the user can add books in the catalogue
-  private BookSellerGui myGui;
+  //private BookSellerGui myGui;
   //Put agent initializations here
   protected void setup() {
     System.out.println("Hello! Buyer-agent "+getAID().getName()+" is ready.");
   // Create the catalogue
   catalogue = new Hashtable();
   // Create and show the GUI
-  //catalogue.put("BMW", new Integer(20));
-  myGui = new BookSellerGui(this);
-  myGui.show();
+  Object[] args = getArguments();
+  if (args != null && args.length > 0) {
+    for (int k=0; k < args.length; k++) {
+      String title = args[k].toString();
+      ++k;
+      int price = Integer.parseInt(args[k].toString());
+      catalogue.put(title, new Integer(price));
+      
+    }
+  }
+  //myGui = new BookSellerGui(this);
+  //myGui.show();
   DFAgentDescription dfd = new DFAgentDescription();
   dfd.setName(getAID());
   ServiceDescription sd = new ServiceDescription();
@@ -42,7 +53,15 @@ public class BookSellerAgent extends Agent {
   addBehaviour(new OfferRequestsServer());
   // Add the behaviour serving purchase orders from buyer agents
   addBehaviour(new PurchaseOrdersServer());
-  }
+  addBehaviour(new TickerBehaviour(this, 30000) {
+    protected void onTick() {
+      if (purchaseFlag && serverFlag) {
+        myAgent.doDelete();
+      }
+    }
+  });
+    }
+  
   
   protected void takeDown() {
     try {
@@ -52,7 +71,7 @@ public class BookSellerAgent extends Agent {
       fe.printStackTrace();
     }
     // Close the GUI
-    myGui.dispose();
+    //myGui.dispose();
     // Printout a dismissal message
     System.out.println("Seller-agent "+getAID().getName()+" terminating.");
   }
@@ -61,7 +80,6 @@ public class BookSellerAgent extends Agent {
 	  addBehaviour(new OneShotBehaviour() {
 	  public void action() {
 	  catalogue.put(title, new Integer(price));
-	  System.out.println(title);
 	  }
 	  } );
   }
@@ -70,6 +88,7 @@ public class BookSellerAgent extends Agent {
 	    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
 	    ACLMessage msg = myAgent.receive(mt);
   	  if (msg != null) {
+  	    serverFlag = false;
   	    // Message received. Process it
   	    String title = msg.getContent();
   	    ACLMessage reply = msg.createReply();
@@ -87,15 +106,18 @@ public class BookSellerAgent extends Agent {
   	  myAgent.send(reply);
   	  }
   	  else {
+  	    serverFlag = true;
   	    block();
   	  }
   	  }
   }
-  private class PurchaseOrdersServer extends CyclicBehaviour{
-    
+  
+  
+  private class PurchaseOrdersServer extends CyclicBehaviour{  
     public void action() {
       ACLMessage request = myAgent.receive();
       if (request != null) {
+        purchaseFlag = false;
         ACLMessage reply = request.createReply();
         Integer price = (Integer) catalogue.get(request.getContent());
         if (price != null) {
@@ -113,8 +135,10 @@ public class BookSellerAgent extends Agent {
         myAgent.send(reply);
       }
       else {
+        purchaseFlag = true;
         block();
       }
     }
   }
+  
 }

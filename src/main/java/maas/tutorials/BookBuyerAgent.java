@@ -35,30 +35,32 @@ public class BookBuyerAgent extends Agent {
 	    }
     Object[] args = getArguments();
     if (args != null && args.length > 0) {
-        targetBookTitle = args[0].toString();
-        System.out.println("Trying to buy "+targetBookTitle);
-        // Add a TickerBehaviour that schedules a request to seller agents every minute
-        addBehaviour(new TickerBehaviour(this, 3000) {
-      protected void onTick() {
-        // Update the list of seller agents
-        DFAgentDescription template = new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("book-selling");
-        template.addServices(sd);
-        try {
-          DFAgentDescription[] result = DFService.search(myAgent, template);
-          sellerAgents = new AID[result.length];
-          for (int i = 0; i < result.length; ++i) {
-            sellerAgents[i] = result[i].getName();
-          }
-        }
-        catch (FIPAException fe) {
-          fe.printStackTrace();
-        }
+      for (int k = 0; k < args.length;k++) {
+      targetBookTitle = args[k].toString();
+      System.out.println(getAID().getName()+" Trying to buy "+targetBookTitle);
+      // Add a TickerBehaviour that schedules a request to seller agents every minute
+        addBehaviour(new TickerBehaviour(this, 9000) {
+          protected void onTick() {
+            // Update the list of seller agents
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("book-selling");
+            template.addServices(sd);
+              try {
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                sellerAgents = new AID[result.length];
+                for (int i = 0; i < result.length; ++i) {
+                  sellerAgents[i] = result[i].getName();
+                }
+              }
+              catch (FIPAException fe) {
+                fe.printStackTrace();
+              }
     // Perform the request
-        myAgent.addBehaviour(new RequestPerformer());
+              myAgent.addBehaviour(new RequestPerformer());
+          }
+        });
       }
-        }   );
     }
     else {
       
@@ -112,9 +114,11 @@ public class BookBuyerAgent extends Agent {
       case 0:
         // Send the cfp to all sellers
         ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-        for (int i = 0; i < sellerAgents.length; ++i) {
-          cfp.addReceiver(sellerAgents[i]);
-        } 
+        if (sellerAgents != null) {
+          for (int i = 0; i < sellerAgents.length; ++i) {
+            cfp.addReceiver(sellerAgents[i]);
+          } 
+        }
         cfp.setContent(targetBookTitle);
         cfp.setConversationId("book-trade");
         cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
@@ -168,12 +172,16 @@ public class BookBuyerAgent extends Agent {
           // Purchase order reply received
           if (reply.getPerformative() == ACLMessage.INFORM) {
             // Purchase successful. We can terminate
-            System.out.println(targetBookTitle+" successfully purchased from agent "+reply.getSender().getName());
+            System.out.println(getAID().getName()+" successfully purchased "+targetBookTitle +" from agent "+reply.getSender().getName());
             System.out.println("Price = "+bestPrice);
-            myAgent.doDelete();
+            ownedBooks++;
+            if (ownedBooks >= 3) {
+              myAgent.doDelete();
+            }
+            
           }
           else {
-            System.out.println("Attempt failed: requested book already sold.");
+            System.out.println(getAID().getName()+" Attempt failed: requested book already sold.");
           }
             
           step = 4;
@@ -187,11 +195,9 @@ public class BookBuyerAgent extends Agent {
   
     public boolean done() {
       if (step == 2 && bestSeller == null) {
-        System.out.println("Attempt failed: "+targetBookTitle+" not available for sale");
+        System.out.println(getAID().getName()+"Attempt failed: "+targetBookTitle+" not available for sale");
       }
-      else {
-        ownedBooks++;
-      }
+      
       return ((step == 2 && bestSeller == null) || step == 4);
     }
   }
