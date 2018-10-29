@@ -26,19 +26,20 @@ public class BookBuyerAgent extends Agent {
 	private AID[] sellerAgents;
 	// Create a simple GUI for the buyer
 	protected void setup() {
-	// Printout a welcome message
-		System.out.println("Hello! Buyer-agent "+getAID().getName()+" is ready.");
-		 try {
-	      Thread.sleep(3000);
-	    } catch (InterruptedException e) {
-	      //e.printStackTrace();
-	    }
+  	// Printout a welcome message
+  	System.out.println("Hello! Buyer-agent "+getAID().getName()+" is ready.");
+  	try {
+      Thread.sleep(3000);
+    } catch (InterruptedException e) {
+      //e.printStackTrace();
+      }
     Object[] args = getArguments();
     if (args != null && args.length > 0) {
+      
       for (int k = 0; k < args.length;k++) {
-      targetBookTitle = args[k].toString();
-      System.out.println(getAID().getName()+" Trying to buy "+targetBookTitle);
-      // Add a TickerBehaviour that schedules a request to seller agents every minute
+        targetBookTitle = args[k].toString();
+        System.out.println(getAID().getName()+" Trying to buy "+targetBookTitle);
+        // Add a TickerBehaviour that schedules a request to seller agents every minute
         addBehaviour(new TickerBehaviour(this, 9000) {
           protected void onTick() {
             // Update the list of seller agents
@@ -46,43 +47,43 @@ public class BookBuyerAgent extends Agent {
             ServiceDescription sd = new ServiceDescription();
             sd.setType("book-selling");
             template.addServices(sd);
-              try {
-                DFAgentDescription[] result = DFService.search(myAgent, template);
-                sellerAgents = new AID[result.length];
-                for (int i = 0; i < result.length; ++i) {
-                  sellerAgents[i] = result[i].getName();
-                }
+            try {
+              DFAgentDescription[] result = DFService.search(myAgent, template);
+              sellerAgents = new AID[result.length];
+              for (int i = 0; i < result.length; ++i) {
+                sellerAgents[i] = result[i].getName();
               }
-              catch (FIPAException fe) {
-                fe.printStackTrace();
-              }
-    // Perform the request
-              myAgent.addBehaviour(new RequestPerformer());
+            }
+            catch (FIPAException fe) {
+              fe.printStackTrace();
+            }
+            // Perform the request
+            myAgent.addBehaviour(new RequestPerformer());
           }
         });
       }
     }
     else {
-      
       // Make the agent terminate immediately
       System.out.println("No book title specified");
       doDelete();
     }
-        addBehaviour(new TickerBehaviour(this, 3000) {
-        	protected void onTick() {
-        		 myAgent.addBehaviour(new RequestPerformer());
-        		 }
-        		 } );
+    addBehaviour(new TickerBehaviour(this, 3000) {
+      protected void onTick() {
+        myAgent.addBehaviour(new RequestPerformer());
+      }
+    } );
     if (ownedBooks >= 2) {    
       addBehaviour(new shutdown());
     }
 
 	}
+	
 	protected void takeDown() {
 		System.out.println(getAID().getLocalName() + ": Terminating.");
 	}
 
-    // Taken from http://www.rickyvanrijn.nl/2017/08/29/how-to-shutdown-jade-agent-platform-programmatically/
+  // Taken from http://www.rickyvanrijn.nl/2017/08/29/how-to-shutdown-jade-agent-platform-programmatically/
 	private class shutdown extends OneShotBehaviour{
 		public void action() {
 			ACLMessage shutdownMessage = new ACLMessage(ACLMessage.REQUEST);

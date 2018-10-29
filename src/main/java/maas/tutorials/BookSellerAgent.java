@@ -22,45 +22,44 @@ public class BookSellerAgent extends Agent {
   //Put agent initializations here
   protected void setup() {
     System.out.println("Hello! Buyer-agent "+getAID().getName()+" is ready.");
-  // Create the catalogue
-  catalogue = new Hashtable();
-  // Create and show the GUI
-  Object[] args = getArguments();
-  if (args != null && args.length > 0) {
-    for (int k=0; k < args.length; k++) {
-      String title = args[k].toString();
-      ++k;
-      int price = Integer.parseInt(args[k].toString());
-      catalogue.put(title, new Integer(price));
-      
-    }
-  }
-  //myGui = new BookSellerGui(this);
-  //myGui.show();
-  DFAgentDescription dfd = new DFAgentDescription();
-  dfd.setName(getAID());
-  ServiceDescription sd = new ServiceDescription();
-  sd.setType("book-selling");
-  sd.setName("JADE-book-trading");
-  dfd.addServices(sd);
-  try {
-    DFService.register(this, dfd);
-  }
-  catch (FIPAException fe) {
-    fe.printStackTrace();
-  }
-  // Add the behaviour serving requests for offer from buyer agents
-  addBehaviour(new OfferRequestsServer());
-  // Add the behaviour serving purchase orders from buyer agents
-  addBehaviour(new PurchaseOrdersServer());
-  addBehaviour(new TickerBehaviour(this, 30000) {
-    protected void onTick() {
-      if (purchaseFlag && serverFlag) {
-        myAgent.doDelete();
+    // Create the catalogue
+    catalogue = new Hashtable();
+    // Create and show the GUI
+    Object[] args = getArguments();
+    if (args != null && args.length > 0) {
+      for (int k=0; k < args.length; k++) {
+        String title = args[k].toString();
+        ++k;
+        int price = Integer.parseInt(args[k].toString());
+        catalogue.put(title, new Integer(price));
+        
       }
     }
-  });
+    DFAgentDescription dfd = new DFAgentDescription();
+    dfd.setName(getAID());
+    ServiceDescription sd = new ServiceDescription();
+    sd.setType("book-selling");
+    sd.setName("JADE-book-trading");
+    dfd.addServices(sd);
+    try {
+      DFService.register(this, dfd);
     }
+    catch (FIPAException fe) {
+      fe.printStackTrace();
+    }
+    // Add the behaviour serving requests for offer from buyer agents
+    addBehaviour(new OfferRequestsServer());
+    // Add the behaviour serving purchase orders from buyer agents
+    addBehaviour(new PurchaseOrdersServer());
+    // check periodically if there is no more sellers then terminate
+    addBehaviour(new TickerBehaviour(this, 30000) {
+      protected void onTick() {
+        if (purchaseFlag && serverFlag) {
+          myAgent.doDelete();
+        }
+      }
+    });
+  }
   
   
   protected void takeDown() {
@@ -70,18 +69,16 @@ public class BookSellerAgent extends Agent {
     catch (FIPAException fe) {
       fe.printStackTrace();
     }
-    // Close the GUI
-    //myGui.dispose();
     // Printout a dismissal message
     System.out.println("Seller-agent "+getAID().getName()+" terminating.");
   }
   
   public void updateCatalogue(final String title, final int price) {
 	  addBehaviour(new OneShotBehaviour() {
-	  public void action() {
-	  catalogue.put(title, new Integer(price));
-	  }
-	  } );
+  	  public void action() {
+  	    catalogue.put(title, new Integer(price));
+  	  }
+  	} );
   }
   private class OfferRequestsServer extends CyclicBehaviour {
 	  public void action() {
@@ -109,7 +106,7 @@ public class BookSellerAgent extends Agent {
   	    serverFlag = true;
   	    block();
   	  }
-  	  }
+  	}
   }
   
   
